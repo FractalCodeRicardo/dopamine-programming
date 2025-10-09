@@ -1,27 +1,25 @@
 use macroquad::{prelude::*, rand::RandomRange};
 
-const  SIZE: usize = 200;
+const SIZE: usize = 200;
 const SQUARE_SIZE: f32 = 5.;
-const DELAY:f64 = 0.5;
-
+const DELAY: f64 = 0.5;
 
 struct World {
-    cells: Vec<u16>
+    cells: Vec<u16>,
 }
 
 impl World {
-
     fn new() -> Self {
         World {
-            cells: World::create_cells()
+            cells: World::create_cells(),
         }
     }
 
     fn create_cells() -> Vec<u16> {
         let mut cells: Vec<u16> = Vec::new();
 
-        for j in 0..SIZE {
-            for i in 0..SIZE {
+        for _ in 0..SIZE {
+            for _ in 0..SIZE {
                 cells.push(World::random_binary());
             }
         }
@@ -29,30 +27,28 @@ impl World {
         return cells;
     }
 
-    fn random_binary () -> u16 {
+    fn random_binary() -> u16 {
         let rand = RandomRange::gen_range(0., 0.99);
 
-        return if rand > 0.5 {1} else {0}
+        return if rand > 0.5 { 1 } else { 0 };
     }
 
     fn draw(&self) {
         self.draw_cells();
     }
 
-    fn draw_cells (&self) {
-
+    fn draw_cells(&self) {
         for j in 0..SIZE {
             for i in 0..SIZE {
-
                 let is_alive = self.cells[j * SIZE + i];
-                let color = if is_alive == 1 {WHITE} else {BLACK};
-               
+                let color = if is_alive == 1 { WHITE } else { BLACK };
+
                 draw_rectangle(
                     i as f32 * SQUARE_SIZE,
                     j as f32 * SQUARE_SIZE,
                     SQUARE_SIZE,
                     SQUARE_SIZE,
-                    color
+                    color,
                 )
             }
         }
@@ -64,23 +60,19 @@ impl World {
             new_cells.push(c.clone());
         }
 
-        return new_cells
+        return new_cells;
     }
 
     fn next_gen(&mut self) {
         let mut copy = self.get_copy();
 
-
         // println!("Cells: {:?}", self.cells);
 
         for j in 0..SIZE {
             for i in 0..SIZE {
-
                 let is_alive = self.cells[j * SIZE + i];
-
                 let count = self.neighbor_count(i, j);
                 let state = World::get_next_state(count, is_alive);
-
 
                 // println!(" {} {} {} {}", i, j, count, state);
 
@@ -91,19 +83,17 @@ impl World {
         self.cells = copy;
     }
 
-    fn get_next_state(count:u16, is_alive: u16) -> u16 {
-
+    fn get_next_state(count: u16, is_alive: u16) -> u16 {
         if is_alive == 1 {
-
-            if count <2 {
-                return 0
+            if count < 2 {
+                return 0;
             }
 
             if count <= 3 {
                 return 1;
             }
 
-            return 0
+            return 0;
         }
 
         if count == 3 {
@@ -111,21 +101,18 @@ impl World {
         }
 
         return is_alive;
-
     }
 
-    fn neighbor_count(&self, i: usize, j: usize) -> u16{
-
+    fn neighbor_count(&self, i: usize, j: usize) -> u16 {
         let i_from = i.saturating_sub(1);
-        let i_to = (i+2).min(SIZE);
+        let i_to = (i + 2).min(SIZE);
 
         let j_from = j.saturating_sub(1);
-        let j_to = (j+2).min(SIZE);
+        let j_to = (j + 2).min(SIZE);
 
         let mut sum = 0;
         for tj in j_from..j_to {
             for ti in i_from..i_to {
-
                 if tj == j && ti == i {
                     continue;
                 }
