@@ -1,118 +1,9 @@
-use std::{cell::RefCell, collections::HashMap};
+
+use std::collections::HashMap;
 
 use macroquad::{color::{Color, YELLOW}, math::{vec2, Vec2}};
 
-use crate::{consts::{ANT_RADIUS, FOOD_NUMBER, FOOD_PHEROMONE, FOOD_QUANTITY, FOOD_RADIUS, HEIGHT, HOME_PHEROMONE, WIDTH}, utils::{draw_square, valid_pos}};
-
-pub struct TakeResult {
-    pub taked: bool,
-    pub removed: bool
-}
-
-impl TakeResult {
-    pub fn new(taked: bool, removed: bool) ->Self {
-        TakeResult {
-            taked: taked,
-            removed:removed 
-        }
-    }
-}
-
-pub struct Food {
-    pub quantity: f32,
-    pub pos: Vec2
-}
-
-impl Food {
-    pub fn new(pos: Vec2) -> Self{
-        Food {
-            quantity: FOOD_QUANTITY,
-            pos: pos
-        }
-    }
-
-    pub fn take(&mut self) {
-        if self.quantity> 0. {
-            self.quantity -= 1.;
-        }
-    }
-}
-
-pub struct FoodList {
-    pub food: Vec<Food>
-}
-
-
-impl FoodList {
-
-    pub fn new() -> Self {
-        FoodList {
-            food: Self::get_food()
-        }
-    }
-
-    fn get_food() -> Vec<Food> {
-        let mut food = vec![];
-
-        // let cx = WIDTH / 2.;
-        // let cy = HEIGHT /2.;
-        // food.push(Food::new(vec2(cx + 2., cy + 2.)));
-       
-        let mut angle: f32 = 0.;
-        let step = 365. / FOOD_NUMBER as f32;
-
-        while angle <= 365. {
-            let mut x = FOOD_RADIUS * angle.to_radians().cos();
-            let mut y = FOOD_RADIUS * angle.to_radians().sin();
-
-            x = x + WIDTH / 2.;
-            y = y + HEIGHT / 2.;
-
-            x = x.floor();
-            y = y.floor();
-
-            let pos = vec2(x, y);
-            food.push(Food::new(pos));
-            angle += step;
-        }
-
-        return food;
-    }
-
-    pub fn find_index(&mut self, pos:&Vec2) -> Option<usize>  {
-        let res = self
-            .food
-            .iter().position(|i| i.pos == pos.clone());
-
-        return res;
-    }
-
-    pub fn take(&mut self, pos: &Vec2) -> TakeResult {
-        
-        let res = self.find_index(pos);
-
-        if res.is_none() {
-            return TakeResult::new(false, false);
-        }
-
-        let index = res.unwrap();
-        let food = &mut self.food[index];
-        food.take();
-
-        let remove  =food.quantity == 0. ;
-        if remove {
-            self.food.remove(index);
-        }
-
-        return TakeResult::new(true, remove);
-    }
-
-    pub fn draw(&self) {
-        for f in &self.food {
-            draw_square(&f.pos, YELLOW);
-        }
-    }
-}
+use crate::{consts::{ANT_RADIUS, FOOD_NUMBER, FOOD_PHEROMONE, FOOD_QUANTITY, FOOD_RADIUS, HEIGHT, HOME_PHEROMONE, MAX_SMELL, WIDTH}, utils::{draw_square, valid_pos}};
 
 pub struct Pheromone {
     pos: Vec2,
@@ -206,18 +97,31 @@ impl Pheromones {
         let key = Self::get_key(&pos);
 
         if self.food.contains_key(&key) {
+            // println!("Pheromone Food removed {} {}", pos.x, pos.y);
             self.food.remove(&key);
         }
 
+    }
+
+    fn print_pheromone(typ: &str, pheromone: &Pheromone) {
+        println!("{}", typ);
+        println!("P {}{} S {} T {}", 
+            pheromone.pos.x,
+            pheromone.pos.y,
+            pheromone.smell,
+            pheromone.p_type
+            )
     }
     
     pub fn add_home_pheromone(&mut self, pos: &Vec2) {
         let key = Self::get_key(&pos);
         let pheromone = Pheromone {
             pos: vec2(pos.x, pos.y),
-            smell: 255.,
+            smell: MAX_SMELL,
             p_type: HOME_PHEROMONE
         };
+
+        // Self::print_pheromone("home", &pheromone);
         self.home.insert(key, pheromone);
     }
 
@@ -225,10 +129,11 @@ impl Pheromones {
         let key = Self::get_key(&pos);
         let pheromone = Pheromone {
             pos: vec2(pos.x, pos.y),
-            smell: 255.,
+            smell: MAX_SMELL,
             p_type: FOOD_PHEROMONE
         };
-        self.home.insert(key, pheromone);
+        // Self::print_pheromone("food", &pheromone);
+        self.food.insert(key, pheromone);
     }
 
     pub fn add(&mut self, pos: Vec2, p_type: i16) {
@@ -239,16 +144,17 @@ impl Pheromones {
             p_type: p_type,
         };
 
-        let pheromones = if p_type == HOME_PHEROMONE {
-            &mut self.home
-        } else {
-            &mut self.food
+        let pheromones = match p_type {
+            HOME_PHEROMONE => &mut self.home,
+            FOOD_PHEROMONE => &mut self.food,
+            _ => panic!("Not supported")
         };
 
        let exists = pheromones
            .contains_key(&key);
 
         if !exists {
+            // Self::print_pheromone(&p_type.to_string(), &pheromone);
             pheromones.insert(key, pheromone);
             return;
         }
@@ -258,7 +164,9 @@ impl Pheromones {
             .unwrap();
 
         c_pheromone.smell += 1.;
+        c_pheromone.smell.max(MAX_SMELL -1.);
     }
+
 
 
     fn get_key(pos: &Vec2) -> String {
@@ -268,6 +176,18 @@ impl Pheromones {
         return format!("{}-{}", x, y);
     }
 
+    pub fn print(&self) {
+        println!("PHEROMONES ----");
+        println!("FOOD:");
+        for e in &self.food {
+            println!("key {} value {} {} smell {}", e.0, e.1.pos.x, e.1.pos.y, e.1.smell);
+        }
+
+        println!("HOME:");
+        for e in &self.home {
+            println!("key {} value {} {} smell {}", e.0, e.1.pos.x, e.1.pos.y, e.1.smell);
+        }
+    }
     fn get_pheromone(&self, pos: &Vec2, p_type: i16) -> Option<&Pheromone> {
         let key = Self::get_key(pos);
 
@@ -291,7 +211,7 @@ impl Pheromones {
             
         let neighbors = Self::get_neighbors(pos);
         let mut pheromone: Option<Vec2> = None;
-        let max = 0.;
+        let mut max = 0.;
 
         for n in &neighbors {
 
@@ -304,11 +224,8 @@ impl Pheromones {
 
             let phe = res.unwrap();
 
-            if phe.p_type != p_type {
-                continue;
-            }
-
             if phe.smell > max {
+                max = phe.smell;
                 pheromone = Some(phe.pos.clone());
             }
         }

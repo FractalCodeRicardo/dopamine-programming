@@ -1,9 +1,12 @@
-use macroquad::{color::Color, math::Vec2, shapes::draw_rectangle};
+use macroquad::{color::Color, math::Vec2, miniquad::gl::WGL_DEPTH_BITS_ARB, shapes::draw_rectangle, window::screen_width};
 
-use crate::consts::{SQUARE_SIZE, WIDTH};
+use crate::consts::{ WIDTH};
 
 pub fn draw_square(pos: &Vec2, color: Color) {
-    let size: f32 = SQUARE_SIZE;
+
+    let mut size: f32 = screen_width() / WIDTH;
+    println!("SIZE {}", size);
+    size = size.floor();
     draw_rectangle(
         pos.x * size,
         pos.y *size,
