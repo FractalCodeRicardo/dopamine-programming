@@ -1,14 +1,10 @@
-
 mod utils;
 mod consts;
 mod food;
 mod pheromone;
 mod ant;
 
-
-use std::collections::HashMap;
-
-use macroquad::{prelude::*, rand::RandomRange};
+use macroquad::prelude::*;
 use consts::*;
 use utils::*;
 
@@ -53,7 +49,6 @@ impl Simulation {
         self.ants.mov_ants(&self.pheromones);
         self.evaluate_ants_state();
     }
-
 
     fn spread_pheronome(&mut self) {
         for a in &self.ants.ants {

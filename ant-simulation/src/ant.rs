@@ -31,7 +31,6 @@ impl AntList {
         }
     }
 
-
     pub fn mov_ants(&mut self, pheromones: &Pheromones) {
         for a in &mut self.ants {
             a.mov(&pheromones);

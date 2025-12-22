@@ -1,9 +1,5 @@
-
-
 use macroquad::{color::YELLOW, math::{vec2, Vec2}};
-
 use crate::{consts::{FOOD_NUMBER, FOOD_QUANTITY, FOOD_RADIUS, HEIGHT, WIDTH}, utils::draw_square};
-
 
 pub struct TakeResult {
     pub taked: bool,
