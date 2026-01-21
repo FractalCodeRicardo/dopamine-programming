@@ -40,7 +40,7 @@ impl AntList {
     pub fn get_ants(pos: Vec2) -> Vec<Ant> {
         let mut ants = vec![];
 
-        for i in 0..ANTS_NUMBER {
+        for _i in 0..ANTS_NUMBER {
             ants.push(Ant::new(pos));
         }
 
