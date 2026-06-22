@@ -1,0 +1,13 @@
+# Pending stuff:
+- [ ]  Load configuration from environment variables
+- [ ]  Add pagination for large datasets
+- [ ]  Add error reporting
+- [ ]  Support PostgreSQL
+- [ ]  Filter inactive users
+- [ ]  Validate user input
+- [ ]  Add rate limiting
+- [ ]  Handle network failures
+- [ ]  Clear cached user data
+- [ ]  Use HTML templates
+- [ ]  Add retry mechanism
+- [ ]  Implement newsletter sending
